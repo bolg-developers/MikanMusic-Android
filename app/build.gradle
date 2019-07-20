@@ -1,0 +1,80 @@
+apply plugin: 'com.android.application'
+
+apply plugin: 'kotlin-android'
+
+apply plugin: 'kotlin-android-extensions'
+
+android {
+    compileSdkVersion 28
+    defaultConfig {
+        applicationId "com.example.mikan"
+        minSdkVersion 23
+        targetSdkVersion 28
+        // 64k問題回避: https://minpro.net/android-64k-problems
+        multiDexEnabled true
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+
+    // 初期設定
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation 'com.android.support:appcompat-v7:28.0.0'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
+    implementation 'com.android.support:design:28.0.0'
+    implementation 'com.android.support:support-annotations:28.0.0'
+    implementation 'android.arch.lifecycle:extensions:1.1.1'
+
+    // https://qiita.com/takusemba/items/ab7af6a0b748f7ac39d5
+    // にio.grpc:grpc-xxxのバージョンはprotoc-gen-grpc-javaと同じにすると書いてある。
+    // https://github.com/grpc/grpc-java のREADME.mdを見てみると
+    // io.grpc:protoc-gen-grpc-java:1.21.0という記述が見受けられるので1.21.0にしている。
+    implementation "io.grpc:grpc-okhttp:1.21.0"
+    implementation "io.grpc:grpc-protobuf:1.21.0"
+    implementation "io.grpc:grpc-stub:1.21.0"
+    implementation "javax.annotation:javax.annotation-api:1.2"
+
+    // http通信ライブラリ
+    implementation 'com.squareup.okhttp3:okhttp:3.13.1'
+    // for croutine
+    def coroutines_version = '1.0.1'                                                          // Kotlin coroutines用ライブラリ(async, await)のバージョン
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"     // Kotlin coroutines用ライブラリ(async, await)
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"  // Kotlin coroutines用ライブラリ(async, await)
+
+    // 64k問題回避: https://minpro.net/android-64k-problems
+    // compile は古いらしい: https://qiita.com/winningefa/items/9607c98c6ce7389c0520
+    // compile 'com.android.support:multidex:1.0.3'
+    implementation 'com.android.support:multidex:1.0.3'
+
+    //jsonパースライブラリ
+    implementation 'com.eclipsesource.minimal-json:minimal-json:0.9.5'
+
+    // commonsライブラリ
+    implementation 'commons-io:commons-io:2.4'
+    implementation 'org.apache.commons:commons-lang3:3.4'
+
+
+    // 初期設定
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+
+
+}
