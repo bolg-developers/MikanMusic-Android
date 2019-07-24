@@ -10,6 +10,11 @@ import com.example.mikan.DB.TaskModel
 class DBHelper (context: Context):SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION){
 
     @Throws(SQLiteException::class)
+    /**
+     * insertTask(task: TaskModel)
+     * @param task
+     * @return 成功
+     * */
     fun insertTask(task: TaskModel): Boolean {
         val db = writableDatabase
 
@@ -19,8 +24,7 @@ class DBHelper (context: Context):SQLiteOpenHelper(context, DATABASE_NAME, null,
         values.put(DBContract.TaskEntry.PASSWORD, task.password)
         values.put(DBContract.TaskEntry.DISPLAYNAME, task.displayname)
 
-        val rowId = db.insert(DBContract.TaskEntry.TABLE_NAME, null, values)
-
+        db.insert(DBContract.TaskEntry.TABLE_NAME, null, values)
         return true
     }
 

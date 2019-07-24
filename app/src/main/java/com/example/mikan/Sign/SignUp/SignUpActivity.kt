@@ -11,11 +11,11 @@ import kotlinx.android.synthetic.main.activity_signup.*
 import com.example.mikan.ProfileActivity
 import com.example.mikan.Input.*
 import android.text.Editable
+import android.widget.Toast.LENGTH_LONG
 import com.example.mikan.CustomTextWatcher
+import com.example.mikan.DB.DBHelper
+import com.example.mikan.DB.TaskModel
 import com.example.mikan.Interface.CustomTextWatcherListener
-
-
-
 
 
 class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatcherListener {
@@ -24,6 +24,7 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
     val NameInput = 32                // displaynameの最大文字数
     val MinInput = 8                  // 最小文字数
 
+    val dbhelper = DBHelper(this)
     val inputcheck = InputCheck()
 
     /**
@@ -141,8 +142,13 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
                     Toast.makeText(applicationContext, "displaynameが入力されていません", Toast.LENGTH_LONG).show()
                     //displayname.setError("必須です！入力してください")
                 }else{
-                    // 取得したデータをデータベースに入れる
 
+                    // 取得したデータをデータベースに入れる
+                    val task = TaskModel("SIGN.db",numMmap[1].toString(),numMmap[2].toString(),numMmap[3].toString())
+                    val result = dbhelper.insertTask(task)
+                    if (result) {
+                        Toast.makeText(this, "new Task Added!", LENGTH_LONG).show()
+                    }
 
                     val intent = Intent(this, ProfileActivity::class.java)
                     startActivity(intent)
