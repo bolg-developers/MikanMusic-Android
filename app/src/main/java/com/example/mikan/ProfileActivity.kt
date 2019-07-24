@@ -18,16 +18,19 @@ class ProfileActivity : AppCompatActivity() {
 
     lateinit var progressBar: ProgressBar
     val urlReq ="http://ec2-3-112-22-157.ap-northeast-1.compute.amazonaws.com:8080/"
-
+    var text:TextView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_profile)
 
+        text = findViewById(R.id.datatext)
+
         // progressbar設定
         progressBar = findViewById<ProgressBar>(R.id.progressBar)
         progressBar.visibility = View.INVISIBLE
 
+        //非同期開始
         val button = findViewById<Button>(R.id.buttonGet)
         button.setOnClickListener() {
             // 表示
@@ -36,7 +39,6 @@ class ProfileActivity : AppCompatActivity() {
             gfunc()
         }
     }
-
 
     // 全件ジャンル取得タスク
     fun gfunc() = GlobalScope.launch(Dispatchers.Main){

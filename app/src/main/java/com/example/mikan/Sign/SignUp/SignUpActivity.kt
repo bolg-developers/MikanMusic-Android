@@ -6,7 +6,6 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
 import android.widget.*
-import com.example.mikan.Adapter.DBAdapter
 import com.example.mikan.R
 import kotlinx.android.synthetic.main.activity_signup.*
 import com.example.mikan.ProfileActivity
@@ -25,7 +24,6 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
     val NameInput = 32                // displaynameの最大文字数
     val MinInput = 8                  // 最小文字数
 
-    val db = DBAdapter(this)
     val inputcheck = InputCheck()
 
     /**
@@ -132,23 +130,20 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
 
         when (v?.id) {     //switch文はないのでwhen文を使う
             R.id.login -> {
+
                 if(numMmap[1].toString().isEmpty()){
-                    email.setError("必須です！入力してください")
+                    Toast.makeText(applicationContext, "enailが入力されていません", Toast.LENGTH_LONG).show()
+                    //email.setError("必須です！入力してください")
                 }else if(numMmap[2].toString().isEmpty()){
-                    password.setError("必須です！入力してください")
+                    Toast.makeText(applicationContext, "paasswordが入力されていません", Toast.LENGTH_LONG).show()
+                    //password.setError("必須です！入力してください")
                 }else if(numMmap[3].toString().isEmpty()){
-                    displayname.setError("必須です！入力してください")
+                    Toast.makeText(applicationContext, "displaynameが入力されていません", Toast.LENGTH_LONG).show()
+                    //displayname.setError("必須です！入力してください")
                 }else{
                     // 取得したデータをデータベースに入れる
-                    val dbAdapter = DBAdapter(this)        // DBAdapter Get
-                    dbAdapter.openDB_RW()                          // Open DB Read/Write_Mode
-                    dbAdapter.insertRecord(
-                        numMmap[1].toString(),
-                        numMmap[2].toString(),
-                        numMmap[3].toString()
-                    )
-                    // TableにRecord挿入
-                    dbAdapter.closeDB()
+
+
                     val intent = Intent(this, ProfileActivity::class.java)
                     startActivity(intent)
                 }
