@@ -257,4 +257,23 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
         // サーバから画像イメージを取得
 
     }
+
+    /**
+     * onRestart
+     * Activityが返ってきたとき
+     * */
+    override fun onRestart() {
+        super.onRestart()
+
+        // edittextのリセット
+        if(!email.editableText.isEmpty()){
+            email.editableText.clear()
+        }
+        if(!password.editableText.isEmpty()){
+            password.editableText.clear()
+        }
+        if(!displayname.editableText.isEmpty()){
+            displayname.editableText.clear()
+        }
+    }
 }
