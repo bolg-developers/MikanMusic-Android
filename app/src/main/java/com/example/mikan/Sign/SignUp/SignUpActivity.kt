@@ -1,6 +1,7 @@
 package com.example.mikan.Sign.SignUp
 
 import android.content.Intent
+import android.database.Cursor
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
@@ -13,6 +14,7 @@ import com.example.mikan.Input.*
 import android.text.Editable
 import android.widget.Toast.LENGTH_LONG
 import com.example.mikan.CustomTextWatcher
+import com.example.mikan.DB.DBContract
 import com.example.mikan.DB.DBHelper
 import com.example.mikan.DB.TaskModel
 import com.example.mikan.Interface.CustomTextWatcherListener
@@ -117,6 +119,28 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
             }
         }
 }
+
+    /**
+     * LoginEmptyCheck
+     *
+     * */
+    fun LoginEmptyCheck(numMmap: MutableMap<Int, String>):Boolean
+    {
+        if(numMmap[1].toString().isEmpty()){
+            Toast.makeText(applicationContext, "enailが入力されていません", Toast.LENGTH_LONG).show()
+            //email.setError("必須です！入力してください")
+        }else if(numMmap[2].toString().isEmpty()){
+            Toast.makeText(applicationContext, "paasswordが入力されていません", Toast.LENGTH_LONG).show()
+            //password.setError("必須です！入力してください")
+        }else if(numMmap[3].toString().isEmpty()){
+            Toast.makeText(applicationContext, "displaynameが入力されていません", Toast.LENGTH_LONG).show()
+            //displayname.setError("必須です！入力してください")
+        }else{
+            return false
+        }
+        return true
+    }
+
     /**
      * onClick
      * クリック処理
@@ -128,23 +152,28 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
         // 必須条件
         val numMmap: MutableMap<Int, String> =
             mutableMapOf(1 to email.text.toString(), 2 to password.text.toString(), 3 to displayname.text.toString())
-
-        when (v?.id) {     //switch文はないのでwhen文を使う
+        when (v?.id) {
             R.id.login -> {
 
-                if(numMmap[1].toString().isEmpty()){
-                    Toast.makeText(applicationContext, "enailが入力されていません", Toast.LENGTH_LONG).show()
-                    //email.setError("必須です！入力してください")
-                }else if(numMmap[2].toString().isEmpty()){
-                    Toast.makeText(applicationContext, "paasswordが入力されていません", Toast.LENGTH_LONG).show()
-                    //password.setError("必須です！入力してください")
-                }else if(numMmap[3].toString().isEmpty()){
-                    Toast.makeText(applicationContext, "displaynameが入力されていません", Toast.LENGTH_LONG).show()
-                    //displayname.setError("必須です！入力してください")
-                }else{
+                if (!LoginEmptyCheck(numMmap)) {
+                    // DBにアクセス
+                    var cur = dbhelper.ReadTask(DBContract.TaskEntry.DISPLAYNAME)
+                    if (cur.moveToNext()) {
+                        do {
+                            // 同じdisplaynameが無いか確認
+                            if (cur.getString(0) == numMmap[3].toString()) {
+                                Log.d("hs/db_displayname", "ある")
+                            } else {
+                                Log.d("hs/db_displayname", "なし")
+                            }
+
+                        } while (cur.moveToNext())
+                    }
+
+                    // 比較結果によって格納するか判断
 
                     // 取得したデータをデータベースに入れる
-                    val task = TaskModel("SIGN.db",numMmap[1].toString(),numMmap[2].toString(),numMmap[3].toString())
+                    val task = TaskModel("SIGN.db", numMmap[1].toString(), numMmap[2].toString(), numMmap[3].toString())
                     val result = dbhelper.insertTask(task)
                     if (result) {
                         Toast.makeText(this, "new Task Added!", LENGTH_LONG).show()
@@ -159,12 +188,10 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
                 profileimg.setImageResource(R.mipmap.tubasa)
             }
         }
-
     }
 
     // EditTextの内容の監視
     // 入力条件を満たしていないときのアクション
-
     override fun afterTextChanged(view: View, s: Editable?) {
         // 初期状態
 
@@ -209,7 +236,6 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
                     introduction.setError("$MaxInput 文字が上限です")
                 }
             }
-
         }
     }
 

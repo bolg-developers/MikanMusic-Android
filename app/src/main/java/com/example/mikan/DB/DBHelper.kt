@@ -2,9 +2,11 @@ package com.example.mikan.DB
 
 import android.content.ContentValues
 import android.content.Context
+import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
 import android.database.sqlite.SQLiteOpenHelper
+import com.example.mikan.DB.DBContract.TaskEntry.Companion.TABLE_NAME
 import com.example.mikan.DB.TaskModel
 
 class DBHelper (context: Context):SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION){
@@ -13,7 +15,6 @@ class DBHelper (context: Context):SQLiteOpenHelper(context, DATABASE_NAME, null,
     /**
      * insertTask(task: TaskModel)
      * @param task
-     * @return 成功
      * */
     fun insertTask(task: TaskModel): Boolean {
         val db = writableDatabase
@@ -26,6 +27,11 @@ class DBHelper (context: Context):SQLiteOpenHelper(context, DATABASE_NAME, null,
 
         db.insert(DBContract.TaskEntry.TABLE_NAME, null, values)
         return true
+    }
+
+    fun ReadTask( key :String):Cursor{
+        val db = readableDatabase
+        return db.rawQuery("SELECT " + key + " FROM " + TABLE_NAME,null)
     }
 
     companion object {
