@@ -1,4 +1,4 @@
-package com.example.mikan
+package com.example.mikan.Input
 
 import android.text.Editable
 import android.text.TextWatcher

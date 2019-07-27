@@ -6,17 +6,17 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
 import android.widget.*
-import com.example.mikan.Adapter.DBAdapter
 import com.example.mikan.R
 import kotlinx.android.synthetic.main.activity_signup.*
 import com.example.mikan.ProfileActivity
 import com.example.mikan.Input.*
 import android.text.Editable
-import com.example.mikan.CustomTextWatcher
+import android.widget.Toast.LENGTH_LONG
+import com.example.mikan.Input.CustomTextWatcher
+import com.example.mikan.DB.DBContract
+import com.example.mikan.DB.DBHelper
+import com.example.mikan.DB.TaskModel
 import com.example.mikan.Interface.CustomTextWatcherListener
-
-
-
 
 
 class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatcherListener {
@@ -25,8 +25,12 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
     val NameInput = 32                // displaynameの最大文字数
     val MinInput = 8                  // 最小文字数
 
-    val db = DBAdapter(this)
+    val dbhelper = DBHelper(this)
     val inputcheck = InputCheck()
+
+    var input_e_error = false
+    var input_p_error = false
+    var input_d_error = false
 
     /**
      * onCreate処理
@@ -39,7 +43,7 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
         login.setOnClickListener(this)
 
         // 入力初期状態
-        if(email.text.isEmpty()){email.setError("必須入力")}
+        if(email.editableText.isEmpty()){email.setError("必須入力")}
         if(password.text.isEmpty()){password.setError("必須入力")}
         if(displayname.text.isEmpty()){displayname.setError("必須入力")}
 
@@ -118,6 +122,28 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
             }
         }
 }
+
+    /**
+     * LoginEmptyCheck
+     *
+     * */
+    fun LoginEmptyCheck(numMmap: MutableMap<Int, String>):Boolean
+    {
+        if(numMmap[1].toString().isEmpty()){
+            Toast.makeText(applicationContext, "enailが入力されていません", Toast.LENGTH_LONG).show()
+            //email.setError("必須です！入力してください")
+        }else if(numMmap[2].toString().isEmpty()){
+            Toast.makeText(applicationContext, "paasswordが入力されていません", Toast.LENGTH_LONG).show()
+            //password.setError("必須です！入力してください")
+        }else if(numMmap[3].toString().isEmpty()){
+            Toast.makeText(applicationContext, "displaynameが入力されていません", Toast.LENGTH_LONG).show()
+            //displayname.setError("必須です！入力してください")
+        }else{
+            return false
+        }
+        return true
+    }
+
     /**
      * onClick
      * クリック処理
@@ -129,28 +155,23 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
         // 必須条件
         val numMmap: MutableMap<Int, String> =
             mutableMapOf(1 to email.text.toString(), 2 to password.text.toString(), 3 to displayname.text.toString())
-
-        when (v?.id) {     //switch文はないのでwhen文を使う
+        when (v?.id) {
             R.id.login -> {
-                if(numMmap[1].toString().isEmpty()){
-                    email.setError("必須です！入力してください")
-                }else if(numMmap[2].toString().isEmpty()){
-                    password.setError("必須です！入力してください")
-                }else if(numMmap[3].toString().isEmpty()){
-                    displayname.setError("必須です！入力してください")
-                }else{
-                    // 取得したデータをデータベースに入れる
-                    val dbAdapter = DBAdapter(this)        // DBAdapter Get
-                    dbAdapter.openDB_RW()                          // Open DB Read/Write_Mode
-                    dbAdapter.insertRecord(
-                        numMmap[1].toString(),
-                        numMmap[2].toString(),
-                        numMmap[3].toString()
-                    )
-                    // TableにRecord挿入
-                    dbAdapter.closeDB()
-                    val intent = Intent(this, ProfileActivity::class.java)
-                    startActivity(intent)
+
+                // 空白チェック
+                if (!LoginEmptyCheck(numMmap) ) {
+                    if(input_e_error && input_d_error && input_p_error) {
+                                // 取得したデータをデータベースに入れる
+                                val task =
+                                    TaskModel(DBContract.TaskEntry.TASK_NAME, "0", numMmap[3].toString())
+                                val result = dbhelper.insertTask(task)
+                                if (result) {
+                                    Toast.makeText(this, "new Task Added!", LENGTH_LONG).show()
+                                }
+
+                                val intent = Intent(this, ProfileActivity::class.java)
+                                startActivity(intent)
+                    }
                 }
             }
             R.id.profileimg -> {
@@ -158,12 +179,9 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
                 profileimg.setImageResource(R.mipmap.tubasa)
             }
         }
-
     }
-
     // EditTextの内容の監視
     // 入力条件を満たしていないときのアクション
-
     override fun afterTextChanged(view: View, s: Editable?) {
         // 初期状態
 
@@ -176,12 +194,13 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
                 if(e == -1){
                     email.setError("@をつけてください")
                 }
+                else{
+                    input_e_error = true
+                }
                 if(s.toString().length > 255){
                     email.setError("上限です")
                     Log.d("hs/input","emailは" + s.toString().length.toString())
                 }
-                // 空白でないか
-                //DBにアクセスし同じ文字になっていないか/既に登録されていないか
             }
             password -> { // 最小8～最大255
                 if(s.toString().isEmpty()){
@@ -191,10 +210,29 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
                 if(s.toString().length < MinInput){
                     password.setError("$MinInput 以上入力してください")
                     Log.d("hs/input","passwordは" +s.toString().length.toString())
+                } else{
+                    Log.d("hs/input","true" )
+                    input_p_error = true
                 }
-
             }
             displayname -> { //最大32文字
+
+                // 同一displaynameが存在するかチェック
+                var cur = dbhelper.GetRecordTask(DBContract.TaskEntry.DISPLAYNAME)
+                if (cur.moveToFirst()) {
+                    do {
+                        // 同じdisplaynameが無いか確認
+                        if (cur.getString(0) == s.toString()) {
+                            Log.d("hs/db_displayname", "ある")
+                            displayname.setError("既に存在しています")
+                        } else {
+                            Log.d("hs/db_displayname", "なし")
+                            input_d_error = true
+                        }
+                    } while (cur.moveToNext())
+                }
+                cur.close()
+
                 if(s.toString().isEmpty()){
                     displayname.setError("入力必須です")
                 }
@@ -208,7 +246,6 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
                     introduction.setError("$MaxInput 文字が上限です")
                 }
             }
-
         }
     }
 
@@ -229,5 +266,24 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
         // サーバからユーザー情報を取得しDBに格納
         // サーバから画像イメージを取得
 
+    }
+
+    /**
+     * onRestart
+     * Activityが返ってきたとき
+     * */
+    override fun onRestart() {
+        super.onRestart()
+
+        // edittextのリセット
+        if(!email.editableText.isEmpty()){
+            email.editableText.clear()
+        }
+        if(!password.editableText.isEmpty()){
+            password.editableText.clear()
+        }
+        if(!displayname.editableText.isEmpty()){
+            displayname.editableText.clear()
+        }
     }
 }
