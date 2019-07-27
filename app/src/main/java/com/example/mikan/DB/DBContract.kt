@@ -7,9 +7,7 @@ object DBContract {
         companion object {
             const val TABLE_NAME = "tasks"
             const val TASK_NAME = "task_name"
-            const val EMAIL = "email"
-            const val PASSWORD = "password"
-            const val DISPLAYNAME = "displayname"
-        }
+            const val STATUS = "status"
+            const val DISPLAYNAME = "displayname"        }
     }
 }

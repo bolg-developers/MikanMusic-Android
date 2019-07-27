@@ -3,6 +3,7 @@ package com.example.mikan.Sign
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import com.example.mikan.ProfileActivity
 import com.example.mikan.R
 import com.example.mikan.Sign.SignIn.SignInActivity
 import com.example.mikan.Sign.SignUp.SignUpActivity

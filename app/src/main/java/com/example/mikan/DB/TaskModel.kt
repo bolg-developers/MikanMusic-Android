@@ -1,3 +1,3 @@
 package com.example.mikan.DB
 
-class TaskModel(val name: String, val email: String, val password: String, val displayname: String)
+class TaskModel(val name: String, val status: String, val displayname: String)
