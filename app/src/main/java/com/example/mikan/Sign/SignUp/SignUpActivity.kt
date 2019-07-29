@@ -8,7 +8,7 @@ import android.view.View
 import android.widget.*
 import com.example.mikan.R
 import kotlinx.android.synthetic.main.activity_signup.*
-import com.example.mikan.ProfileActivity
+import com.example.mikan.ItemList
 import com.example.mikan.Input.*
 import android.text.Editable
 import android.widget.Toast.LENGTH_LONG
@@ -21,20 +21,22 @@ import com.example.mikan.Interface.CustomTextWatcherListener
 
 class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatcherListener {
 
-    val MaxInput = 255                // 最大文字数
-    val NameInput = 32                // displaynameの最大文字数
-    val MinInput = 8                  // 最小文字数
+    val MaxInput = 255                            // email.passwordの入力最大文字数
+    val NameInput = 32                            // displaynameの最大文字数
+    val MinInput = 8                              // 上記の最小文字数
 
-    val dbhelper = DBHelper(this)
-    val inputcheck = InputCheck()
+    val dbhelper = DBHelper(this)        // データベースヘルパー
+    val inputcheck = InputCheck()                 //入力エラーチェッククラス
 
     /**
-     * onCreate処理
+     * onCreate
+     * Activity生成時
      * */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_signup)
 
+        // click設定
         profileimg.setOnClickListener(this)
         login.setOnClickListener(this)
 
@@ -54,12 +56,12 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
         password.apply { addTextChangedListener(CustomTextWatcher(this, this@SignUpActivity)) }
         displayname.apply { addTextChangedListener(CustomTextWatcher(this, this@SignUpActivity)) }
 
-
-        // スピナー登録
+        // Spinner項目
         val arr_year =  Array(29, { i -> (i + 1990).toString() })
         val arr_month = Array(12, { i -> (i + 1).toString() })
         val arr_dayys = Array(31, { i -> (i + 1).toString() })
 
+        // Spinner登録
         SpinnerInit(arr_year, "yaer")
         SpinnerInit(arr_month, "month")
         SpinnerInit(arr_dayys, "day")
@@ -68,14 +70,17 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
 
     /**
      * SpinnerInit(itemArray: Array<String>, spinnerName: String)
-     *
+     * @param itemArray    アイテムリスト
+     * @param spinnerName  spinnerのId名
+     * Spinnerの初期登録関数
      * */
     fun SpinnerInit(itemArray: Array<String>, spinnerName: String) {
+
         val adapter = ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, itemArray)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
 
         //SpinnerのViewIDを抽出
-        var viewId = resources.getIdentifier(spinnerName, "id", packageName)
+        val viewId = resources.getIdentifier(spinnerName, "id", packageName)
         val spinner = findViewById<Spinner>(viewId)
 
         //アダプターを設定
@@ -87,16 +92,16 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
                                         position: Int, id: Long) {
 
                // val spinner = parent as Spinner
-
             }
             override fun onNothingSelected(arg0: AdapterView<*>) {}
         }
-
     }
+
     /**
      * LoginEmptyCheck
-     *
-     * */
+     * @param numMmap  必須条件の内容
+     * 入力情報の空白チェック
+     **/
     fun LoginEmptyCheck(numMmap: MutableMap<Int, String>):Boolean
     {
         if(numMmap[1].toString().isEmpty()){
@@ -117,29 +122,35 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
     /**
      * onClick
      * クリック処理
-     * @param v
-     * login      : ログインボタン
-     * profileimg : イメージ画像変更ボタン
+     * @param view  ビュー
+     * login        ログインボタン
+     * profileimg   イメージ画像変更ボタン
      * */
-    override fun onClick(v: View?) {
+    override fun onClick(view: View?) {
+
         // 必須条件
         val numMmap: MutableMap<Int, String> =
             mutableMapOf(1 to email.text.toString(), 2 to password.text.toString(), 3 to displayname.text.toString())
-        when (v?.id) {
-            R.id.login -> {
 
+        when (view?.id) {
+
+            R.id.login -> {
                 // 空白チェック
                 if (!LoginEmptyCheck(numMmap) ) {
-                                // 取得したデータをデータベースに入れる
-                                val task =
-                                    TaskModel(DBContract.TaskEntry.TASK_NAME, "0", numMmap[3].toString())
-                                val result = dbhelper.insertTask(task)
-                                if (result) {
-                                    Toast.makeText(this, "new Task Added!", LENGTH_LONG).show()
-                                }
 
-                                val intent = Intent(this, ProfileActivity::class.java)
-                                startActivity(intent)
+                    // 取得したデータをデータベースに入れる
+                    val task =
+                        TaskModel(DBContract.TaskEntry.TASK_NAME, "0", numMmap[3].toString())
+
+                    val result = dbhelper.insertTask(task)
+
+                    if (result) {
+                        Toast.makeText(this, "DBInputDone", LENGTH_LONG).show()
+                    }
+
+                    // メインとなるActivityに遷移
+                    val intent = Intent(this, ItemList::class.java)
+                    startActivity(intent)
                 }
             }
             R.id.profileimg -> {
@@ -148,17 +159,23 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
             }
         }
     }
-    // EditTextの内容の監視
-    // 入力条件を満たしていないときのアクション
+
+    /**
+     * afterTextChanged
+     * @param view
+     * @param s
+     * EditTextの内容の監視
+     * 入力条件を満たしていないときのアクション
+     * */
     override fun afterTextChanged(view: View, s: Editable?) {
-        // 初期状態
 
         when(view){
-            email -> {
+            email -> { // 条件：最小8～最大255
                 if(s.toString().isEmpty()){
                     email.setError("入力必須です")
                 }
-               val e =  inputcheck.emailcheck(s.toString(),'@')
+                val e =  inputcheck.emailcheck(s.toString(),'@')
+
                 if(e == -1){
                     email.setError("@をつけてください")
                 }
@@ -168,17 +185,17 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
                     Log.d("hs/input","emailは" + s.toString().length.toString())
                 }
             }
-            password -> { // 最小8～最大255
+            password -> { // 条件：最小8～最大255
                 if(s.toString().isEmpty()){
                     password.setError("入力必須です")
                 }
 
                 if(s.toString().length < MinInput){
                     password.setError("$MinInput 以上入力してください")
-                    Log.d("hs/input","passwordは" +s.toString().length.toString())
+                    Log.d("hs/input","passwordは" + s.toString().length.toString())
                 }
             }
-            displayname -> { //最大32文字
+            displayname -> { // 条件：最大32文字
 
                 // 同一displaynameが存在するかチェック
                 var cur = dbhelper.GetRecordTask(DBContract.TaskEntry.DISPLAYNAME)
@@ -209,16 +226,35 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
         }
     }
 
+    /**
+     * beforeTextChanged
+     * @param view
+     * @param str
+     * @param start
+     * @param count
+     * @param after
+     *
+     * */
     override fun beforeTextChanged(view: View, s: CharSequence?, start: Int, count: Int, after: Int) {
 
     }
 
+    /**
+     * onTextChanged
+     * @param view
+     * @param str
+     * @param start
+     * @param  before
+     * @param count
+     *
+     * */
     override fun onTextChanged(view: View, s: CharSequence?, start: Int, before: Int, count: Int) {
 
     }
 
 
-    /***
+    /**
+     * onStart()
      * アクティビティが呼ばれたとき
      */
     override fun onStart() {
@@ -229,7 +265,7 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
     }
 
     /**
-     * onRestart
+     * onRestart()
      * Activityが返ってきたとき
      * */
     override fun onRestart() {
