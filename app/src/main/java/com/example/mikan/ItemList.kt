@@ -28,6 +28,7 @@ class ItemList : AppCompatActivity() {
         "音楽の投稿",
         "プレイリスト"
     )
+
     //val dbhelper = DBHelper(this)
     //var data:String? = null
 
