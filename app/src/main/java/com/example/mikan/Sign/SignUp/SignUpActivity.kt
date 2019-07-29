@@ -28,10 +28,6 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
     val dbhelper = DBHelper(this)
     val inputcheck = InputCheck()
 
-    var input_e_error = false
-    var input_p_error = false
-    var input_d_error = false
-
     /**
      * onCreate処理
      * */
@@ -43,86 +39,60 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
         login.setOnClickListener(this)
 
         // 入力初期状態
-        if(email.editableText.isEmpty()){email.setError("必須入力")}
-        if(password.text.isEmpty()){password.setError("必須入力")}
-        if(displayname.text.isEmpty()){displayname.setError("必須入力")}
+        if (email.editableText.isEmpty()) {
+            email.setError("必須入力")
+        }
+        if (password.text.isEmpty()) {
+            password.setError("必須入力")
+        }
+        if (displayname.text.isEmpty()) {
+            displayname.setError("必須入力")
+        }
 
         // 入力監視
         email.apply { addTextChangedListener(CustomTextWatcher(this, this@SignUpActivity)) }
         password.apply { addTextChangedListener(CustomTextWatcher(this, this@SignUpActivity)) }
         displayname.apply { addTextChangedListener(CustomTextWatcher(this, this@SignUpActivity)) }
 
+
         // スピナー登録
-        val yadapter = ArrayAdapter.createFromResource(this,
-            R.array.yearspinner_values,
-            R.layout.support_simple_spinner_dropdown_item
-        )
-        val madapter = ArrayAdapter.createFromResource(this,
-            R.array.monthspinners_values,
-            R.layout.support_simple_spinner_dropdown_item
-        )
-        val dadapter = ArrayAdapter.createFromResource(this,
-            R.array.dayspinners_values,
-            R.layout.support_simple_spinner_dropdown_item
-        )
-        // ドロップダウン形式
-        yadapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        madapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        dadapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        val arr_year =  Array(29, { i -> (i + 1990).toString() })
+        val arr_month = Array(12, { i -> (i + 1).toString() })
+        val arr_dayys = Array(31, { i -> (i + 1).toString() })
 
-        // adapterセット
-        yaer.adapter = yadapter
-        month.adapter = madapter
-        day.adapter = dadapter
+        SpinnerInit(arr_year, "yaer")
+        SpinnerInit(arr_month, "month")
+        SpinnerInit(arr_dayys, "day")
+    }
 
-        /**
-         * 生年月日入力設定
-         */
-        // リスナーを登録
-        yaer.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
-            //　アイテムが選択された時
-            override fun onItemSelected(parent: AdapterView<*>?,
-                                        view: View?, position: Int, id: Long) {
-                val spinnerParent = parent as Spinner
-                val item = spinnerParent.selectedItem as String
-                // Kotlin Android Extensions
-                yaertext.text = item
+
+    /**
+     * SpinnerInit(itemArray: Array<String>, spinnerName: String)
+     *
+     * */
+    fun SpinnerInit(itemArray: Array<String>, spinnerName: String) {
+        val adapter = ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, itemArray)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+
+        //SpinnerのViewIDを抽出
+        var viewId = resources.getIdentifier(spinnerName, "id", packageName)
+        val spinner = findViewById<Spinner>(viewId)
+
+        //アダプターを設定
+        spinner.adapter = adapter
+
+        // スピナーのアイテムが選択された時に呼び出されるコールバックリスナーを登録
+        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View,
+                                        position: Int, id: Long) {
+
+               // val spinner = parent as Spinner
+
             }
-            //　アイテムが選択されなかった
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-            }
+            override fun onNothingSelected(arg0: AdapterView<*>) {}
         }
 
-        // リスナーを登録
-        month.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
-            //　アイテムが選択された時
-            override fun onItemSelected(parent: AdapterView<*>?,
-                                        view: View?, position: Int, id: Long) {
-                val spinnerParent = parent as Spinner
-                val item = spinnerParent.selectedItem as String
-                // Kotlin Android Extensions
-                monthtext.text = item
-            }
-            //　アイテムが選択されなかった
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-            }
-        }
-        // リスナーを登録
-        day.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
-            //　アイテムが選択された時
-            override fun onItemSelected(parent: AdapterView<*>?,
-                                        view: View?, position: Int, id: Long) {
-                val spinnerParent = parent as Spinner
-                val item = spinnerParent.selectedItem as String
-                // Kotlin Android Extensions
-                daytext.text = item
-            }
-            //　アイテムが選択されなかった
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-            }
-        }
-}
-
+    }
     /**
      * LoginEmptyCheck
      *
@@ -160,7 +130,6 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
 
                 // 空白チェック
                 if (!LoginEmptyCheck(numMmap) ) {
-                    if(input_e_error && input_d_error && input_p_error) {
                                 // 取得したデータをデータベースに入れる
                                 val task =
                                     TaskModel(DBContract.TaskEntry.TASK_NAME, "0", numMmap[3].toString())
@@ -171,7 +140,6 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
 
                                 val intent = Intent(this, ProfileActivity::class.java)
                                 startActivity(intent)
-                    }
                 }
             }
             R.id.profileimg -> {
@@ -194,9 +162,7 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
                 if(e == -1){
                     email.setError("@をつけてください")
                 }
-                else{
-                    input_e_error = true
-                }
+
                 if(s.toString().length > 255){
                     email.setError("上限です")
                     Log.d("hs/input","emailは" + s.toString().length.toString())
@@ -210,9 +176,6 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
                 if(s.toString().length < MinInput){
                     password.setError("$MinInput 以上入力してください")
                     Log.d("hs/input","passwordは" +s.toString().length.toString())
-                } else{
-                    Log.d("hs/input","true" )
-                    input_p_error = true
                 }
             }
             displayname -> { //最大32文字
@@ -225,9 +188,6 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
                         if (cur.getString(0) == s.toString()) {
                             Log.d("hs/db_displayname", "ある")
                             displayname.setError("既に存在しています")
-                        } else {
-                            Log.d("hs/db_displayname", "なし")
-                            input_d_error = true
                         }
                     } while (cur.moveToNext())
                 }
