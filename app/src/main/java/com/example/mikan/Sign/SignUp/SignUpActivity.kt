@@ -28,7 +28,6 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
     val inputcheck = InputCheck()                 // 入力エラーチェッククラス
     val URL ="http://ec2-3-112-22-157.ap-northeast-1.compute.amazonaws.com:8080/"
     lateinit var numMmap: MutableMap<Int, String>
-    var str :String? =null
 
     /**
      * onCreate
@@ -278,10 +277,8 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
             for(item in 0..(genres.length()-1)){
             //インデックスで情報を指定する
             val randb=genres.getJSONObject(item)
-            str += randb.getString("id")+randb.getString("name")+"\n"
-        }
-
-            test.setText(str)
+                Log.d("hs/get/genres",randb.getString("id")+randb.getString("name")+"\n")
+            }
         }
     }
 
