@@ -8,15 +8,21 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import com.example.mikan.DB.DBHelper
 import kotlinx.android.synthetic.main.activity_itemlist.*
 import kotlinx.android.synthetic.main.list_item.view.*
 
 class ItemList : AppCompatActivity() {
 
+    val dbhelper = DBHelper(this)        // データベースヘルパー
+
+    // リストのアイコン
     val itemicon = listOf(
         R.mipmap.ic_launcher,
         R.mipmap.ic_launcher_round
     )
+
+    // リスト情報
     val titletext = listOf(
         "音楽の投稿",
         "プレイリスト"
@@ -24,6 +30,7 @@ class ItemList : AppCompatActivity() {
 
     // List生成と初期化
     val itemdata = List(titletext.size) { i -> ItemListData(titletext[i], itemicon[i])}
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,12 +41,14 @@ class ItemList : AppCompatActivity() {
 
         listView.setOnItemClickListener{ adapterView, view, position, id ->
             val name = view.findViewById<TextView>(R.id.itemtextView).text
-            Toast.makeText(this, "clicked: $name", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "clicked$position: $name \n $id", Toast.LENGTH_LONG).show()
+            dbhelper.DeleteAll()
+            
         }
     }
 
     /**
-     * ItemListAdapter(context: Context, itemlist: List<ItemListData>) : ArrayAdapter<ItemListData>(context, 0, itemlist)
+     * ItemListAdapter(context: Context, itemlist: List<ItemListData>)
      * @param context
      * @param itemlist
      * ArrayAdapterを継承している
@@ -52,8 +61,11 @@ class ItemList : AppCompatActivity() {
             var view = convertView
             var holder: ViewHolder
 
+            // nullでなければ使いまわす
             if (view == null) {
                 view = layoutInflater.inflate(R.layout.list_item, parent, false)
+
+                // ViewHolderにviewをセットする
                 holder = ViewHolder(
                     view?.itemtextView!!,
                     view.itemlistimage

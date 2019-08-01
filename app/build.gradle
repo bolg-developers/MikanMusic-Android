@@ -51,10 +51,14 @@ dependencies {
 
     // http通信ライブラリ
     implementation 'com.squareup.okhttp3:okhttp:3.13.1'
+
     // for croutine
-    def coroutines_version = '1.0.1'                                                          // Kotlin coroutines用ライブラリ(async, await)のバージョン
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"     // Kotlin coroutines用ライブラリ(async, await)
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"  // Kotlin coroutines用ライブラリ(async, await)
+    def coroutines_version = '1.0.1'
+    // Kotlin coroutines用ライブラリ(async, await)のバージョン
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"
+    // Kotlin coroutines用ライブラリ(async, await)
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
+    // Kotlin coroutines用ライブラリ(async, await)
 
     // 64k問題回避: https://minpro.net/android-64k-problems
     // compile は古いらしい: https://qiita.com/winningefa/items/9607c98c6ce7389c0520

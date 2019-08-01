@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.example.mikan">
 
-    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
             android:allowBackup="true"
@@ -11,35 +11,33 @@
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
-
         <activity
-                android:name=".MainActivity">
+                android:name=".Navigation"
+                android:label="@string/title_activity_navigation">
+        </activity>
+        <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
+
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-
         <activity
                 android:name=".Sign.SignUp.SignUpActivity"
                 android:label="@string/title_activity_signin">
         </activity>
-
         <activity
                 android:name=".Sign.SignIn.SignInActivity"
                 android:label="@string/title_activity_signup">
         </activity>
-
         <activity
                 android:name=".Sign.SignSelectActivity"
                 android:label="@string/title_activity_signselect">
         </activity>
-
         <activity
                 android:name=".ItemList"
                 android:label="@string/title_activity_profile">
         </activity>
-
     </application>
 
 </manifest>

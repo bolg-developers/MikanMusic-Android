@@ -8,7 +8,6 @@ import android.view.View
 import android.widget.*
 import com.example.mikan.R
 import kotlinx.android.synthetic.main.activity_signup.*
-import com.example.mikan.ItemList
 import com.example.mikan.Input.*
 import android.text.Editable
 import android.widget.Toast.LENGTH_LONG
@@ -17,16 +16,19 @@ import com.example.mikan.DB.DBContract
 import com.example.mikan.DB.DBHelper
 import com.example.mikan.DB.TaskModel
 import com.example.mikan.Interface.CustomTextWatcherListener
+import com.example.mikan.Navigation
+import com.example.mikan.await.HttpUtil
+import kotlinx.coroutines.*
+import org.json.JSONObject
 
 
 class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatcherListener {
 
-    val MaxInput = 255                            // email.passwordの入力最大文字数
-    val NameInput = 32                            // displaynameの最大文字数
-    val MinInput = 8                              // 上記の最小文字数
-
     val dbhelper = DBHelper(this)        // データベースヘルパー
-    val inputcheck = InputCheck()                 //入力エラーチェッククラス
+    val inputcheck = InputCheck()                 // 入力エラーチェッククラス
+    val URL ="http://ec2-3-112-22-157.ap-northeast-1.compute.amazonaws.com:8080/"
+    lateinit var numMmap: MutableMap<Int, String>
+    var str :String? =null
 
     /**
      * onCreate
@@ -59,12 +61,18 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
         // Spinner項目
         val arr_year =  Array(29, { i -> (i + 1990).toString() })
         val arr_month = Array(12, { i -> (i + 1).toString() })
-        val arr_dayys = Array(31, { i -> (i + 1).toString() })
+        val arr_days = Array(31, { i -> (i + 1).toString() })
 
         // Spinner登録
         SpinnerInit(arr_year, "yaer")
         SpinnerInit(arr_month, "month")
-        SpinnerInit(arr_dayys, "day")
+        SpinnerInit(arr_days, "day")
+
+        // 警告の初期化
+        if(email.text.isEmpty()){ email.setError("入力必須です") }
+        if(password.text.isEmpty()){ password.setError("入力必須です") }
+        if(displayname.text.isEmpty()){ displayname.setError("入力必須です") }
+
     }
 
 
@@ -129,8 +137,11 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
     override fun onClick(view: View?) {
 
         // 必須条件
-        val numMmap: MutableMap<Int, String> =
-            mutableMapOf(1 to email.text.toString(), 2 to password.text.toString(), 3 to displayname.text.toString())
+        numMmap = mutableMapOf(1 to email.text.toString(),
+                2 to password.text.toString(),
+                3 to displayname.text.toString(),
+                4 to "tubasa",
+                5 to introduction.text.toString())
 
         when (view?.id) {
 
@@ -148,8 +159,11 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
                         Toast.makeText(this, "DBInputDone", LENGTH_LONG).show()
                     }
 
+                    // 入力情報をPOSTする
+                    //signup_func()
+
                     // メインとなるActivityに遷移
-                    val intent = Intent(this, ItemList::class.java)
+                    val intent = Intent(this, Navigation::class.java)
                     startActivity(intent)
                 }
             }
@@ -164,19 +178,20 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
      * afterTextChanged
      * @param view
      * @param s
-     * EditTextの内容の監視
-     * 入力条件を満たしていないときのアクション
+     * 最後にこのメソッドが呼び出される
+     * 入力条件を満たしていないときのアクションを行う
      * */
     override fun afterTextChanged(view: View, s: Editable?) {
 
+        val MaxInput = 255                            // email.passwordの入力最大文字数
+        val NameInput = 32                            // displaynameの最大文字数
+        val MinInput = 8                              // 上記の最小文字数
+
         when(view){
             email -> { // 条件：最小8～最大255
-                if(s.toString().isEmpty()){
-                    email.setError("入力必須です")
-                }
-                val e =  inputcheck.emailcheck(s.toString(),'@')
 
-                if(e == -1){
+                // @の検知
+                if(inputcheck.emailcheck(s.toString(),'@') == -1){
                     email.setError("@をつけてください")
                 }
 
@@ -185,17 +200,21 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
                     Log.d("hs/input","emailは" + s.toString().length.toString())
                 }
             }
+
             password -> { // 条件：最小8～最大255
-                if(s.toString().isEmpty()){
-                    password.setError("入力必須です")
-                }
 
                 if(s.toString().length < MinInput){
                     password.setError("$MinInput 以上入力してください")
                     Log.d("hs/input","passwordは" + s.toString().length.toString())
                 }
+
             }
             displayname -> { // 条件：最大32文字
+
+
+                if(s.toString().length > NameInput){
+                    displayname.setError("$NameInput 文字が上限です")
+                }
 
                 // 同一displaynameが存在するかチェック
                 var cur = dbhelper.GetRecordTask(DBContract.TaskEntry.DISPLAYNAME)
@@ -210,14 +229,8 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
                 }
                 cur.close()
 
-                if(s.toString().isEmpty()){
-                    displayname.setError("入力必須です")
-                }
-
-                if(s.toString().length > NameInput){
-                    displayname.setError("$NameInput 文字が上限です")
-                }
             }
+
             introduction ->{ // 最大255文字
                 if(s.toString().length > MaxInput){
                     introduction.setError("$MaxInput 文字が上限です")
@@ -233,25 +246,44 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
      * @param start
      * @param count
      * @param after
-     *
+     * 文字列が修正される直前に呼び出されるメソッド
      * */
     override fun beforeTextChanged(view: View, s: CharSequence?, start: Int, count: Int, after: Int) {
 
     }
 
     /**
-     * onTextChanged
+     * onTextChanged(view: View, s: CharSequence?, start: Int, before: Int, count: Int)
      * @param view
      * @param str
      * @param start
      * @param  before
      * @param count
-     *
+     * 文字１つを入力した時に呼び出される
      * */
     override fun onTextChanged(view: View, s: CharSequence?, start: Int, before: Int, count: Int) {
 
     }
 
+
+    fun signup_func()= GlobalScope.launch(Dispatchers.Main){
+
+        val ag = HttpUtil()
+
+        //ここで非同期
+        async(Dispatchers.Default){ag.get(URL + "v1/genres") }.await().let {
+            val result = JSONObject(it)
+            val genres = result.getJSONArray("genres")
+
+            for(item in 0..(genres.length()-1)){
+            //インデックスで情報を指定する
+            val randb=genres.getJSONObject(item)
+            str += randb.getString("id")+randb.getString("name")+"\n"
+        }
+
+            test.setText(str)
+        }
+    }
 
     /**
      * onStart()
@@ -261,7 +293,6 @@ class SignUpActivity :AppCompatActivity(),View.OnClickListener, CustomTextWatche
         super.onStart()
         // サーバからユーザー情報を取得しDBに格納
         // サーバから画像イメージを取得
-
     }
 
     /**
